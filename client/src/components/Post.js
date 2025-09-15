@@ -1,12 +1,12 @@
 import React from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { Link, useNavigate } from 'react-router-dom';
+// The unused 'useNavigate' has been removed from the line below
+import { Link } from 'react-router-dom';
 import { deletePost } from '../features/posts/postSlice';
 
 const Post = ({ post }) => {
   const dispatch = useDispatch();
-  const navigate = useNavigate();
-  // The unused 'token' variable has been removed from the line below
+  // The unused 'navigate' variable has been removed from the line below
   const { user } = useSelector((state) => state.auth);
 
   const handleDelete = () => {
