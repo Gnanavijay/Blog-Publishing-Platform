@@ -1,46 +1,81 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001';
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api/auth';
 
-export const signUp = createAsyncThunk('auth/signUp', async (userData) => {
-    const response = await axios.post(`${API_URL}/auth/signup`, userData);
-    return response.data;
-});
+// Async thunk for user signup
+export const signupUser = createAsyncThunk(
+  'auth/signup',
+  async (userData, { rejectWithValue }) => {
+    try {
+      const response = await axios.post(`${API_URL}/signup`, userData);
+      // Assuming the backend returns user and token
+      localStorage.setItem('user', JSON.stringify(response.data));
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response.data);
+    }
+  }
+);
 
-export const login = createAsyncThunk('auth/login', async (userData) => {
-    const response = await axios.post(`${API_URL}/auth/login`, userData);
-    localStorage.setItem('token', response.data.session.access_token);
-    return response.data;
-});
+// Async thunk for user login
+export const loginUser = createAsyncThunk( // <-- RENAMED from 'login' to 'loginUser'
+  'auth/login',
+  async (userData, { rejectWithValue }) => {
+    try {
+      const response = await axios.post(`${API_URL}/login`, userData);
+      localStorage.setItem('user', JSON.stringify(response.data));
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response.data);
+    }
+  }
+);
 
+const initialState = {
+  user: JSON.parse(localStorage.getItem('user')) || null,
+  status: 'idle', // 'idle' | 'loading' | 'succeeded' | 'failed'
+  error: null,
+};
 
 const authSlice = createSlice({
-    name: 'auth',
-    initialState: {
-        user: null,
-        token: localStorage.getItem('token'),
-        status: 'idle',
-        error: null,
+  name: 'auth',
+  initialState,
+  reducers: {
+    logout: (state) => {
+      localStorage.removeItem('user');
+      state.user = null;
+      state.status = 'idle';
+      state.error = null;
     },
-    reducers: {
-        logout: (state) => {
-            state.user = null;
-            state.token = null;
-            localStorage.removeItem('token');
-        }
-    },
-    extraReducers: (builder) => {
-        builder
-            .addCase(signUp.fulfilled, (state, action) => {
-                // You might want to automatically log in the user or just signify success
-            })
-            .addCase(login.fulfilled, (state, action) => {
-                state.user = action.payload.user;
-                state.token = action.payload.session.access_token;
-            });
-    },
+  },
+  extraReducers: (builder) => {
+    builder
+      .addCase(signupUser.pending, (state) => {
+        state.status = 'loading';
+      })
+      .addCase(signupUser.fulfilled, (state, action) => {
+        state.status = 'succeeded';
+        state.user = action.payload;
+      })
+      .addCase(signupUser.rejected, (state, action) => {
+        state.status = 'failed';
+        state.error = action.payload;
+      })
+      .addCase(loginUser.pending, (state) => { // <-- UPDATED to use loginUser
+        state.status = 'loading';
+      })
+      .addCase(loginUser.fulfilled, (state, action) => { // <-- UPDATED to use loginUser
+        state.status = 'succeeded';
+        state.user = action.payload;
+      })
+      .addCase(loginUser.rejected, (state, action) => { // <-- UPDATED to use loginUser
+        state.status = 'failed';
+        state.error = action.payload;
+      });
+  },
 });
 
 export const { logout } = authSlice.actions;
 export default authSlice.reducer;
+
