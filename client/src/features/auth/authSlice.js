@@ -20,7 +20,8 @@ export const signUpUser = createAsyncThunk(
   'auth/signUpUser',
   async ({ name, email, password }, { rejectWithValue }) => {
     try {
-      const response = await axios.post(`${API__URL}/auth/signup`, { name, email, password });
+      // Corrected the typo from API__URL to API_URL
+      const response = await axios.post(`${API_URL}/auth/signup`, { name, email, password });
       localStorage.setItem('user', JSON.stringify(response.data));
       return response.data;
     } catch (error) {
@@ -72,7 +73,6 @@ const authSlice = createSlice({
   },
 });
 
-// This is the line that was missing and has now been added.
 export const { setUser, logout } = authSlice.actions;
 
 export default authSlice.reducer;
