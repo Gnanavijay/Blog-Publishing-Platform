@@ -1,29 +1,13 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api/auth';
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 
-// Async thunk for user signup
-export const signUpUser = createAsyncThunk( // <-- RENAMED from 'signupUser' to 'signUpUser'
-  'auth/signup',
-  async (userData, { rejectWithValue }) => {
-    try {
-      const response = await axios.post(`${API_URL}/signup`, userData);
-      // Assuming the backend returns user and token
-      localStorage.setItem('user', JSON.stringify(response.data));
-      return response.data;
-    } catch (error) {
-      return rejectWithValue(error.response.data);
-    }
-  }
-);
-
-// Async thunk for user login
 export const loginUser = createAsyncThunk(
-  'auth/login',
-  async (userData, { rejectWithValue }) => {
+  'auth/loginUser',
+  async ({ email, password }, { rejectWithValue }) => {
     try {
-      const response = await axios.post(`${API_URL}/login`, userData);
+      const response = await axios.post(`${API_URL}/auth/login`, { email, password });
       localStorage.setItem('user', JSON.stringify(response.data));
       return response.data;
     } catch (error) {
@@ -32,36 +16,37 @@ export const loginUser = createAsyncThunk(
   }
 );
 
-const initialState = {
-  user: JSON.parse(localStorage.getItem('user')) || null,
-  status: 'idle', // 'idle' | 'loading' | 'succeeded' | 'failed'
-  error: null,
-};
+export const signUpUser = createAsyncThunk(
+  'auth/signUpUser',
+  async ({ name, email, password }, { rejectWithValue }) => {
+    try {
+      const response = await axios.post(`${API__URL}/auth/signup`, { name, email, password });
+      localStorage.setItem('user', JSON.stringify(response.data));
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response.data);
+    }
+  }
+);
 
 const authSlice = createSlice({
   name: 'auth',
-  initialState,
+  initialState: {
+    user: null,
+    status: 'idle',
+    error: null,
+  },
   reducers: {
+    setUser: (state, action) => {
+      state.user = action.payload;
+    },
     logout: (state) => {
-      localStorage.removeItem('user');
       state.user = null;
-      state.status = 'idle';
-      state.error = null;
+      localStorage.removeItem('user');
     },
   },
   extraReducers: (builder) => {
     builder
-      .addCase(signUpUser.pending, (state) => { // <-- UPDATED to use signUpUser
-        state.status = 'loading';
-      })
-      .addCase(signUpUser.fulfilled, (state, action) => { // <-- UPDATED to use signUpUser
-        state.status = 'succeeded';
-        state.user = action.payload;
-      })
-      .addCase(signUpUser.rejected, (state, action) => { // <-- UPDATED to use signUpUser
-        state.status = 'failed';
-        state.error = action.payload;
-      })
       .addCase(loginUser.pending, (state) => {
         state.status = 'loading';
       })
@@ -72,9 +57,22 @@ const authSlice = createSlice({
       .addCase(loginUser.rejected, (state, action) => {
         state.status = 'failed';
         state.error = action.payload;
+      })
+      .addCase(signUpUser.pending, (state) => {
+        state.status = 'loading';
+      })
+      .addCase(signUpUser.fulfilled, (state, action) => {
+        state.status = 'succeeded';
+        state.user = action.payload;
+      })
+      .addCase(signUpUser.rejected, (state, action) => {
+        state.status = 'failed';
+        state.error = action.payload;
       });
   },
 });
 
-export const { logout } = authSlice.actions;
+// This is the line that was missing and has now been added.
+export const { setUser, logout } = authSlice.actions;
+
 export default authSlice.reducer;
