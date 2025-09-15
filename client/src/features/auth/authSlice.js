@@ -4,7 +4,7 @@ import axios from 'axios';
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api/auth';
 
 // Async thunk for user signup
-export const signupUser = createAsyncThunk(
+export const signUpUser = createAsyncThunk( // <-- RENAMED from 'signupUser' to 'signUpUser'
   'auth/signup',
   async (userData, { rejectWithValue }) => {
     try {
@@ -19,7 +19,7 @@ export const signupUser = createAsyncThunk(
 );
 
 // Async thunk for user login
-export const loginUser = createAsyncThunk( // <-- RENAMED from 'login' to 'loginUser'
+export const loginUser = createAsyncThunk(
   'auth/login',
   async (userData, { rejectWithValue }) => {
     try {
@@ -51,25 +51,25 @@ const authSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      .addCase(signupUser.pending, (state) => {
+      .addCase(signUpUser.pending, (state) => { // <-- UPDATED to use signUpUser
         state.status = 'loading';
       })
-      .addCase(signupUser.fulfilled, (state, action) => {
+      .addCase(signUpUser.fulfilled, (state, action) => { // <-- UPDATED to use signUpUser
         state.status = 'succeeded';
         state.user = action.payload;
       })
-      .addCase(signupUser.rejected, (state, action) => {
+      .addCase(signUpUser.rejected, (state, action) => { // <-- UPDATED to use signUpUser
         state.status = 'failed';
         state.error = action.payload;
       })
-      .addCase(loginUser.pending, (state) => { // <-- UPDATED to use loginUser
+      .addCase(loginUser.pending, (state) => {
         state.status = 'loading';
       })
-      .addCase(loginUser.fulfilled, (state, action) => { // <-- UPDATED to use loginUser
+      .addCase(loginUser.fulfilled, (state, action) => {
         state.status = 'succeeded';
         state.user = action.payload;
       })
-      .addCase(loginUser.rejected, (state, action) => { // <-- UPDATED to use loginUser
+      .addCase(loginUser.rejected, (state, action) => {
         state.status = 'failed';
         state.error = action.payload;
       });
@@ -78,4 +78,3 @@ const authSlice = createSlice({
 
 export const { logout } = authSlice.actions;
 export default authSlice.reducer;
-
